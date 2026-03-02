@@ -7,10 +7,10 @@ import java.sql.SQLException;
 
 import jakarta.inject.Inject;
 
-import org.agroal.api.AgroalDataSource;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.agroal.api.AgroalDataSource;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
