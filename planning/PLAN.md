@@ -30,7 +30,7 @@ Task Index (work top-to-bottom)
   - Details: `planning/TASK-01-deps-and-config.md`
 - [x] TASK-02: Flyway migrations (Db2 DDL + indexes)
   - Details: `planning/TASK-02-flyway-migrations.md`
-- [ ] TASK-03: Domain model (entities + enums + soft delete + version)
+- [x] TASK-03: Domain model (entities + enums + soft delete + version)
   - Details: `planning/TASK-03-domain-model.md`
 - [ ] TASK-04: DTOs + validation (create/update/patch/bulk + responses)
   - Details: `planning/TASK-04-dtos-and-validation.md`
