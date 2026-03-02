@@ -36,7 +36,7 @@ Task Index (work top-to-bottom)
   - Details: `planning/TASK-04-dtos-and-validation.md`
 - [x] TASK-05: Query model (list/search/filter/sort/pagination)
   - Details: `planning/TASK-05-querying.md`
-- [ ] TASK-06: Service layer (CRUD + bulk + tags + trash/restore + audit)
+- [x] TASK-06: Service layer (CRUD + bulk + tags + trash/restore + audit)
   - Details: `planning/TASK-06-service-layer.md`
 - [ ] TASK-07: REST API resource (endpoints + ETag/If-Match)
   - Details: `planning/TASK-07-rest-api.md`
