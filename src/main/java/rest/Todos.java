@@ -2,7 +2,12 @@ package rest;
 
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
+
+import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLTransientConnectionException;
 
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +16,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 
 import org.jboss.resteasy.reactive.RestForm;
+import org.hibernate.exception.JDBCConnectionException;
 
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.qute.CheckedTemplate;
@@ -38,15 +44,14 @@ public class Todos extends Controller {
      */
     @CheckedTemplate
     public static class Templates {
-        public static native TemplateInstance todos(List<TodoView> todos);
+        public static native TemplateInstance todos(List<TodoView> todos, String boardError, String toastMessage);
     }
 
     @Path("/")
     public TemplateInstance index() {
-        List<TodoView> todos = taskService.list(TaskQuery.defaults().withSize(200)).items().stream()
-                .map(TodoView::fromEntity)
-                .toList();
-        return Templates.todos(todos);
+        BoardData boardData = loadBoardData();
+        String toastMessage = this.flash.get("toastError");
+        return Templates.todos(boardData.todos(), boardData.boardError(), toastMessage);
     }
     
     @POST
@@ -58,7 +63,15 @@ public class Todos extends Controller {
         CreateTaskRequest request = new CreateTaskRequest();
         request.setTitle(title);
         request.setStatus(TaskStatus.OPEN);
-        taskService.create(request);
+        try {
+            taskService.create(request);
+        } catch (RuntimeException e) {
+            if (isDatabaseUnavailable(e)) {
+                flash("toastError", "Could not add task: database is currently unavailable.");
+                index();
+            }
+            throw e;
+        }
 
         index();
     }
@@ -66,30 +79,81 @@ public class Todos extends Controller {
     @POST
     @Path("/complete")
     public void complete(@RestForm @NotBlank String id) {
-        runIgnoringMissing(() -> taskService.markCompleted(id));
+        runIgnoringMissing(
+                () -> taskService.markCompleted(id),
+                "Could not complete task: database is currently unavailable.");
         index();
     }
 
     @POST
     @Path("/reopen")
     public void reopen(@RestForm @NotBlank String id) {
-        runIgnoringMissing(() -> taskService.reopen(id));
+        runIgnoringMissing(
+                () -> taskService.reopen(id),
+                "Could not reopen task: database is currently unavailable.");
         index();
     }
 
     @POST
     @Path("/delete")
     public void delete(@RestForm @NotBlank String id) {
-        runIgnoringMissing(() -> taskService.softDelete(id));
+        runIgnoringMissing(
+                () -> taskService.softDelete(id),
+                "Could not delete task: database is currently unavailable.");
         index();
     }
 
-    private void runIgnoringMissing(Runnable action) {
+    private BoardData loadBoardData() {
+        try {
+            List<TodoView> todos = taskService.list(TaskQuery.defaults().withSize(200)).items().stream()
+                    .map(TodoView::fromEntity)
+                    .toList();
+            return new BoardData(todos, null);
+        } catch (RuntimeException e) {
+            if (isDatabaseUnavailable(e)) {
+                return new BoardData(
+                        Collections.emptyList(),
+                        "Database is unavailable right now. Please check DB2 connectivity and try again.");
+            }
+            throw e;
+        }
+    }
+
+    private void runIgnoringMissing(Runnable action, String unavailableMessage) {
         try {
             action.run();
         } catch (TaskNotFoundException ignored) {
             // Missing task should not block a post-redirect-get flow.
+        } catch (RuntimeException e) {
+            if (isDatabaseUnavailable(e)) {
+                flash("toastError", unavailableMessage);
+                return;
+            }
+            throw e;
         }
+    }
+
+    static boolean isDatabaseUnavailable(Throwable throwable) {
+        Throwable cursor = throwable;
+        while (cursor != null) {
+            if (cursor instanceof JDBCConnectionException
+                    || cursor instanceof SQLTransientConnectionException
+                    || cursor instanceof SQLNonTransientConnectionException) {
+                return true;
+            }
+
+            if (cursor instanceof SQLException sqlException) {
+                String state = sqlException.getSQLState();
+                if (state != null && state.startsWith("08")) {
+                    return true;
+                }
+            }
+            cursor = cursor.getCause();
+        }
+        return false;
+    }
+
+    private record BoardData(List<TodoView> todos, String boardError) {
     }
 
     public record TodoView(

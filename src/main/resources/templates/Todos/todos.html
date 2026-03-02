@@ -167,6 +167,43 @@
     text-align: center;
   }
 
+  .board-error {
+    border: 3px solid #121212;
+    border-radius: 12px;
+    box-shadow: 5px 5px 0 0 #121212;
+    background: #ffd3da;
+    color: #121212;
+    font-weight: 700;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .toast {
+    position: sticky;
+    top: 0.5rem;
+    margin-left: auto;
+    width: fit-content;
+    max-width: min(420px, 100%);
+    border: 3px solid #121212;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0 0 #121212;
+    background: #ffd3da;
+    padding: 0.6rem 0.8rem;
+    font-weight: 700;
+    z-index: 2;
+    animation: toast-in 220ms ease-out;
+  }
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   @media (max-width: 640px) {
     .composer form {
       grid-template-columns: 1fr;
@@ -176,6 +213,10 @@
 {/moreStyles}
 
 <section class="todo-board">
+  {#if toastMessage}
+    <div class="toast">{toastMessage}</div>
+  {/if}
+
   <div class="board-head">
     <div>
       <h1>Tasks in DB2</h1>
@@ -194,7 +235,10 @@
     {/form}
   </div>
 
-  {#if todos.isEmpty}
+  {#if boardError}
+    <div class="board-error">{boardError}</div>
+  {#else}
+    {#if todos.isEmpty}
     <div class="empty">No tasks yet. Add one above and start your streak.</div>
   {#else}
     <div class="todo-grid">
@@ -240,6 +284,7 @@
         </article>
       {/for}
     </div>
+  {/if}
   {/if}
 </section>
 {/include}
