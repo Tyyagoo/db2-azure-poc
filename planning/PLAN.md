@@ -32,7 +32,7 @@ Task Index (work top-to-bottom)
   - Details: `planning/TASK-02-flyway-migrations.md`
 - [x] TASK-03: Domain model (entities + enums + soft delete + version)
   - Details: `planning/TASK-03-domain-model.md`
-- [ ] TASK-04: DTOs + validation (create/update/patch/bulk + responses)
+- [x] TASK-04: DTOs + validation (create/update/patch/bulk + responses)
   - Details: `planning/TASK-04-dtos-and-validation.md`
 - [ ] TASK-05: Query model (list/search/filter/sort/pagination)
   - Details: `planning/TASK-05-querying.md`
