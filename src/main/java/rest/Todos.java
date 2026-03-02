@@ -25,6 +25,7 @@ import service.task.TaskQuery;
 /**
  * This defines a REST controller, each method will be available under the "Classname/method" URI by convention
  */
+@Path("/")
 public class Todos extends Controller {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -37,21 +38,11 @@ public class Todos extends Controller {
      */
     @CheckedTemplate
     public static class Templates {
-        /**
-         * This specifies that the Todos/index.html template does not take any parameter
-         */
-        public static native TemplateInstance index();
         public static native TemplateInstance todos(List<TodoView> todos);
     }
 
-    // This overrides the convention and makes this method available at "/renarde"
-    @Path("/renarde")
+    @Path("/")
     public TemplateInstance index() {
-        // renders the Todos/index.html template
-        return Templates.index();
-    }
-
-    public TemplateInstance todos() {
         List<TodoView> todos = taskService.list(TaskQuery.defaults().withSize(200)).items().stream()
                 .map(TodoView::fromEntity)
                 .toList();
@@ -61,7 +52,7 @@ public class Todos extends Controller {
     @POST
     public void add(@RestForm @NotBlank @Size(max = 255) String title) {
         if (validationFailed()) {
-            todos();
+            index();
         }
 
         CreateTaskRequest request = new CreateTaskRequest();
@@ -69,25 +60,28 @@ public class Todos extends Controller {
         request.setStatus(TaskStatus.OPEN);
         taskService.create(request);
 
-        todos();
+        index();
     }
 
     @POST
+    @Path("/complete")
     public void complete(@RestForm @NotBlank String id) {
         runIgnoringMissing(() -> taskService.markCompleted(id));
-        todos();
+        index();
     }
 
     @POST
+    @Path("/reopen")
     public void reopen(@RestForm @NotBlank String id) {
         runIgnoringMissing(() -> taskService.reopen(id));
-        todos();
+        index();
     }
 
     @POST
+    @Path("/delete")
     public void delete(@RestForm @NotBlank String id) {
         runIgnoringMissing(() -> taskService.softDelete(id));
-        todos();
+        index();
     }
 
     private void runIgnoringMissing(Runnable action) {

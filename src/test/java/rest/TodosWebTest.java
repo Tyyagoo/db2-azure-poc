@@ -33,13 +33,13 @@ class TodosWebTest {
                 .formParam("csrf-token", csrf.token())
                 .formParam("title", title)
                 .when()
-                .post("/Todos/add")
+                .post("/add")
                 .then()
                 .statusCode(303);
 
         given()
                 .when()
-                .get("/Todos/todos")
+                .get("/")
                 .then()
                 .statusCode(200)
                 .body(containsString("todo-board"))
@@ -70,13 +70,13 @@ class TodosWebTest {
                 .formParam("csrf-token", csrf.token())
                 .formParam("id", id)
                 .when()
-                .post("/Todos/complete")
+                .post("/complete")
                 .then()
                 .statusCode(303);
 
         given()
                 .when()
-                .get("/Todos/todos")
+                .get("/")
                 .then()
                 .statusCode(200)
                 .body(containsString("data-task-id=\"" + id + "\""))
@@ -91,13 +91,13 @@ class TodosWebTest {
                 .formParam("csrf-token", csrf.token())
                 .formParam("id", id)
                 .when()
-                .post("/Todos/delete")
+                .post("/delete")
                 .then()
                 .statusCode(303);
 
         given()
                 .when()
-                .get("/Todos/todos")
+                .get("/")
                 .then()
                 .statusCode(200)
                 .body(not(containsString("data-task-id=\"" + id + "\"")));
@@ -106,7 +106,7 @@ class TodosWebTest {
     private Csrf fetchCsrf() {
         Response response = given()
                 .when()
-                .get("/Todos/todos")
+                .get("/")
                 .then()
                 .statusCode(200)
                 .extract()
@@ -122,7 +122,7 @@ class TodosWebTest {
             return new Csrf(matcher.group(1));
         }
 
-        throw new IllegalStateException("Could not extract csrf-token from /Todos/todos");
+        throw new IllegalStateException("Could not extract csrf-token from /");
     }
 
     private record Csrf(String token) {
