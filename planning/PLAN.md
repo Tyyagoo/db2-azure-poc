@@ -26,9 +26,9 @@ Recommended local workflow
 
 Task Index (work top-to-bottom)
 
-- [ ] TASK-01: Dependencies + Quarkus configuration (Flyway/ORM/REST/JSON/Validation/Test DB)
+- [x] TASK-01: Dependencies + Quarkus configuration (Flyway/ORM/REST/JSON/Validation/Test DB)
   - Details: `planning/TASK-01-deps-and-config.md`
-- [ ] TASK-02: Flyway migrations (Db2 DDL + indexes)
+- [x] TASK-02: Flyway migrations (Db2 DDL + indexes)
   - Details: `planning/TASK-02-flyway-migrations.md`
 - [ ] TASK-03: Domain model (entities + enums + soft delete + version)
   - Details: `planning/TASK-03-domain-model.md`
