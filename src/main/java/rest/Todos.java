@@ -1,8 +1,12 @@
 package rest;
 
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 
@@ -11,12 +15,22 @@ import org.jboss.resteasy.reactive.RestForm;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkiverse.renarde.Controller;
-import model.Todo;
+import model.task.TaskEntity;
+import model.task.TaskStatus;
+import rest.tasks.dto.CreateTaskRequest;
+import service.TaskNotFoundException;
+import service.TaskService;
+import service.task.TaskQuery;
 
 /**
  * This defines a REST controller, each method will be available under the "Classname/method" URI by convention
  */
 public class Todos extends Controller {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    @Inject
+    TaskService taskService;
     
     /**
      * This defines templates available in src/main/resources/templates/Classname/method.html by convention
@@ -27,10 +41,7 @@ public class Todos extends Controller {
          * This specifies that the Todos/index.html template does not take any parameter
          */
         public static native TemplateInstance index();
-        /**
-         * This specifies that the Todos/todos.html template takes a todos parameter of type List&lt;Todo&gt;
-         */
-        public static native TemplateInstance todos(List<Todo> todos);
+        public static native TemplateInstance todos(List<TodoView> todos);
     }
 
     // This overrides the convention and makes this method available at "/renarde"
@@ -41,23 +52,85 @@ public class Todos extends Controller {
     }
 
     public TemplateInstance todos() {
-        // renders the Todos/todos.html template with our list of Todo entities
-        return Templates.todos(Todo.listAll());
+        List<TodoView> todos = taskService.list(TaskQuery.defaults().withSize(200)).items().stream()
+                .map(TodoView::fromEntity)
+                .toList();
+        return Templates.todos(todos);
     }
     
-    // Creates a POST action at Todos/add taking a form element named task
     @POST
-    public void add(@RestForm @NotBlank String task) {
-        // If validation fails, redirect to the todos page (with errors propagated)
-        if(validationFailed()) {
-            // redirect to the todos page by just calling the method: it does not return!
+    public void add(@RestForm @NotBlank @Size(max = 255) String title) {
+        if (validationFailed()) {
             todos();
         }
-        // save the new Todo
-        Todo todo = new Todo();
-        todo.task = task;
-        todo.persist();
-        // redirect to the todos page
+
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setTitle(title);
+        request.setStatus(TaskStatus.OPEN);
+        taskService.create(request);
+
         todos();
+    }
+
+    @POST
+    public void complete(@RestForm @NotBlank String id) {
+        runIgnoringMissing(() -> taskService.markCompleted(id));
+        todos();
+    }
+
+    @POST
+    public void reopen(@RestForm @NotBlank String id) {
+        runIgnoringMissing(() -> taskService.reopen(id));
+        todos();
+    }
+
+    @POST
+    public void delete(@RestForm @NotBlank String id) {
+        runIgnoringMissing(() -> taskService.softDelete(id));
+        todos();
+    }
+
+    private void runIgnoringMissing(Runnable action) {
+        try {
+            action.run();
+        } catch (TaskNotFoundException ignored) {
+            // Missing task should not block a post-redirect-get flow.
+        }
+    }
+
+    public record TodoView(
+            String id,
+            String title,
+            boolean completed,
+            String completedAt,
+            String dueDate,
+            Short priority,
+            List<String> tags) {
+
+        static TodoView fromEntity(TaskEntity entity) {
+            String completedAt = null;
+            if (entity.getStatus() == TaskStatus.COMPLETED) {
+                completedAt = DATE_FORMAT.format(entity.getUpdatedAt().atOffset(ZoneOffset.UTC));
+            }
+
+            String dueDate = null;
+            if (entity.getDueDate() != null) {
+                dueDate = DATE_FORMAT.format(entity.getDueDate().atOffset(ZoneOffset.UTC));
+            }
+
+            List<String> tags = entity.getTags().stream()
+                    .map(tag -> tag.getName())
+                    .sorted()
+                    .toList();
+
+            return new TodoView(
+                    entity.getId(),
+                    entity.getTitle(),
+                    entity.getStatus() == TaskStatus.COMPLETED,
+                    completedAt,
+                    dueDate,
+                    entity.getPriority(),
+                    tags);
+        }
     }
 }

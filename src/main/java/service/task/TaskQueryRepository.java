@@ -26,8 +26,7 @@ public class TaskQueryRepository {
         Map<String, Object> parameters = new HashMap<>();
 
         if (!query.tags().isEmpty()) {
-            fromClause.append(" JOIN t.tags tag");
-            predicates.add("LOWER(tag.name) IN :tags");
+            predicates.add("EXISTS (SELECT 1 FROM t.tags tag WHERE LOWER(tag.name) IN :tags)");
             parameters.put("tags", query.tags());
         }
 
@@ -51,10 +50,10 @@ public class TaskQueryRepository {
         String orderByClause = " ORDER BY " + sortExpression(query) + " " + query.order().name() + ", t.id ASC";
 
         TypedQuery<TaskEntity> selectQuery = entityManager.createQuery(
-                "SELECT DISTINCT t" + fromClause + whereClause + orderByClause,
+                "SELECT t" + fromClause + whereClause + orderByClause,
                 TaskEntity.class);
         TypedQuery<Long> countQuery = entityManager.createQuery(
-                "SELECT COUNT(DISTINCT t.id)" + fromClause + whereClause,
+                "SELECT COUNT(t.id)" + fromClause + whereClause,
                 Long.class);
 
         parameters.forEach((name, value) -> {

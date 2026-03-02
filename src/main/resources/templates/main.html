@@ -1,28 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <!-- You can pass parameters from your templates to your main template and insert them -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{#insert title/}</title>
     <style type="text/css">
-    .head {
-      border-bottom: 1px solid black;
-      margin-bottom: 1em;
-    }
-    .head div {
-      display: inline-block;
-      margin: 0.5em;
-    }
+      :root {
+        --ink: #121212;
+        --paper: #fffdf6;
+        --accent-a: #ff6b3d;
+        --accent-b: #33b1ff;
+        --accent-c: #ffe14d;
+        --accent-d: #90f28a;
+        --line: 3px;
+        --radius: 14px;
+        --lift: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        font-family: "Space Grotesk", "Trebuchet MS", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 107, 61, 0.28) 0, rgba(255, 107, 61, 0) 40%),
+          radial-gradient(circle at 84% 24%, rgba(51, 177, 255, 0.25) 0, rgba(51, 177, 255, 0) 35%),
+          linear-gradient(135deg, #fff4cf 0%, #ffd8c7 45%, #d4edff 100%);
+      }
+
+      .grain {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image: repeating-linear-gradient(
+          0deg,
+          rgba(18, 18, 18, 0.05) 0,
+          rgba(18, 18, 18, 0.05) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        opacity: 0.35;
+      }
+
+      .neo-shell {
+        width: min(1024px, calc(100% - 2rem));
+        margin: 1.5rem auto;
+        background: var(--paper);
+        border: var(--line) solid var(--ink);
+        border-radius: calc(var(--radius) + 2px);
+        box-shadow: var(--lift) var(--lift) 0 0 var(--ink);
+        overflow: clip;
+        animation: rise-in 220ms ease-out;
+      }
+
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 1rem 1.2rem;
+        background: var(--accent-c);
+        border-bottom: var(--line) solid var(--ink);
+      }
+
+      .brand {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .head nav {
+        display: flex;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+      }
+
+      .neo-link {
+        display: inline-block;
+        text-decoration: none;
+        color: var(--ink);
+        background: #ffffff;
+        border: var(--line) solid var(--ink);
+        border-radius: 10px;
+        padding: 0.42rem 0.7rem;
+        font-weight: 700;
+        box-shadow: 3px 3px 0 0 var(--ink);
+      }
+
+      .neo-link:hover,
+      .neo-link:focus-visible {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 0 var(--ink);
+      }
+
+      .page {
+        padding: 1.25rem;
+      }
+
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .neo-shell {
+          margin: 0.9rem auto;
+          width: calc(100% - 1rem);
+        }
+
+        .head {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
     </style>
     {#insert moreStyles /}
     {#insert moreScripts /}
   </head>
   <body>
-    <div class="head">
-      <!-- You can make links to actions using the uri: namespace -->
-      <div><a href="{uri:Todos.index}">Index</a></div>
-      <div><a href="{uri:Todos.todos}">Todos</a></div>
+    <div class="grain"></div>
+    <div class="neo-shell">
+      <div class="head">
+        <p class="brand">DB2 Todo Board</p>
+        <nav>
+          <a class="neo-link" href="{uri:Todos.index}">Home</a>
+          <a class="neo-link" href="{uri:Todos.todos}">Board</a>
+        </nav>
+      </div>
+      <main class="page">
+        {#insert /}
+      </main>
     </div>
-    <!-- This inserts the body of your templates -->
-    {#insert /}
   </body>
 </html>

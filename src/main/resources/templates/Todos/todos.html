@@ -1,37 +1,245 @@
 {#include main.html}
 {#title}Todos{/title}
-{! Add some CSS !}
 {#moreStyles}
 <style>
-  .todo {
-    margin: 1em;
+  .todo-board {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
+
+  .board-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .board-head h1 {
+    margin: 0;
+    font-size: clamp(1.4rem, 3.4vw, 2.4rem);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .board-head p {
+    margin: 0.3rem 0 0;
+    font-weight: 600;
+  }
+
+  .task-count {
+    border: 3px solid #121212;
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 0 #121212;
+    background: #33b1ff;
+    font-weight: 800;
+    padding: 0.35rem 0.7rem;
+    white-space: nowrap;
+  }
+
+  .composer {
+    padding: 0.9rem;
+    border: 3px solid #121212;
+    border-radius: 12px;
+    box-shadow: 6px 6px 0 0 #121212;
+    background: #ff6b3d;
+  }
+
+  .composer form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    margin: 0;
+  }
+
+  .composer input {
+    width: 100%;
+    border: 3px solid #121212;
+    border-radius: 10px;
+    font-size: 1rem;
+    padding: 0.64rem 0.72rem;
+    font-family: inherit;
+  }
+
+  .neo-btn {
+    border: 3px solid #121212;
+    border-radius: 10px;
+    background: #ffe14d;
+    color: #121212;
+    padding: 0.56rem 0.78rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 0 #121212;
+  }
+
+  .neo-btn:hover,
+  .neo-btn:focus-visible {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 #121212;
+  }
+
+  .neo-btn.alert {
+    background: #ffd3da;
+  }
+
   .error {
-  	color: red;
-  	border-color: red;
+    margin: 0;
+    color: #121212;
+    font-weight: 700;
+    border: 3px solid #121212;
+    border-radius: 8px;
+    background: #ffd3da;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .todo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0.85rem;
+  }
+
+  .todo-card {
+    display: grid;
+    gap: 0.8rem;
+    border: 3px solid #121212;
+    border-radius: 12px;
+    box-shadow: 6px 6px 0 0 #121212;
+    background: #fffdf6;
+    padding: 0.9rem;
+  }
+
+  .todo-card.is-completed {
+    background: #e6ffe1;
+  }
+
+  .todo-title {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .status-pill {
+    display: inline-block;
+    border: 2px solid #121212;
+    border-radius: 999px;
+    padding: 0.12rem 0.58rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: #ffe14d;
+  }
+
+  .status-pill.completed {
+    background: #90f28a;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .meta-pill {
+    border: 2px solid #121212;
+    border-radius: 8px;
+    background: #d8efff;
+    padding: 0.15rem 0.42rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.42rem;
+  }
+
+  .empty {
+    border: 3px dashed #121212;
+    border-radius: 12px;
+    background: #ffffff;
+    font-weight: 700;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .composer form {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 {/moreStyles}
 
-  {! Iterate over our todo items !}
-  {#for todo in todos}
-    <div class="todo">
-      {! This invokes the JavaExtensions.capitalise(String) extension method !}
-      {todo.task.capitalise}
-      {#if todo.completed}
-        (done {todo.completed.since})
-      {/if}
+<section class="todo-board">
+  <div class="board-head">
+    <div>
+      <h1>Tasks in DB2</h1>
+      <p>Capture, complete, and clear tasks without leaving the board.</p>
     </div>
-  {/for} 
+    <div class="task-count">{todos.size} tasks</div>
+  </div>
 
-  {! A form action calling Todos.add() !}
-  {#form uri:Todos.add()}
-    {! We add some information if there's a validation error !}
-    <input name="task" placeholder="Enter new task" {#ifError 'task'}class="error"{/}/>
-    {#ifError 'task'}
-      <div class="error">
-      	Error: {#error 'task'/}
-      </div>
-    {/ifError}
-  {/form}
+  <div class="composer">
+    {#form uri:Todos.add()}
+      <input name="title" placeholder="Ship migration docs" {#ifError 'title'}class="error"{/ifError} />
+      <button class="neo-btn" type="submit">Add task</button>
+      {#ifError 'title'}
+        <p class="error">Title error: {#error 'title'/}</p>
+      {/ifError}
+    {/form}
+  </div>
+
+  {#if todos.isEmpty}
+    <div class="empty">No tasks yet. Add one above and start your streak.</div>
+  {#else}
+    <div class="todo-grid">
+      {#for todo in todos}
+        <article class="todo-card {#if todo.completed}is-completed{/if}" data-task-id="{todo.id}">
+          <div>
+            <span class="status-pill {#if todo.completed}completed{/if}">
+              {#if todo.completed}Completed{#else}Open{/if}
+            </span>
+            <h2 class="todo-title">{todo.title.capitalise}</h2>
+            {#if todo.completedAt}
+              <div class="meta">
+                <span class="meta-pill">Done {todo.completedAt}</span>
+              </div>
+            {/if}
+          </div>
+
+          <div class="meta">
+            {#if todo.dueDate}<span class="meta-pill">Due {todo.dueDate}</span>{/if}
+            {#if todo.priority}<span class="meta-pill">Priority {todo.priority}</span>{/if}
+            {#for tag in todo.tags}
+              <span class="meta-pill">#{tag}</span>
+            {/for}
+          </div>
+
+          <div class="actions">
+            {#if todo.completed}
+              {#form uri:Todos.reopen()}
+                <input type="hidden" name="id" value="{todo.id}" />
+                <button class="neo-btn" type="submit">Reopen</button>
+              {/form}
+            {#else}
+              {#form uri:Todos.complete()}
+                <input type="hidden" name="id" value="{todo.id}" />
+                <button class="neo-btn" type="submit">Complete</button>
+              {/form}
+            {/if}
+            {#form uri:Todos.delete()}
+              <input type="hidden" name="id" value="{todo.id}" />
+              <button class="neo-btn alert" type="submit">Delete</button>
+            {/form}
+          </div>
+        </article>
+      {/for}
+    </div>
+  {/if}
+</section>
 {/include}

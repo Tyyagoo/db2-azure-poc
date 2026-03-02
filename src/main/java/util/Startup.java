@@ -1,30 +1,35 @@
 package util;
 
-import java.util.Date;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.StartupEvent;
-import model.Todo;
+import model.task.TaskEntity;
+import model.task.TaskStatus;
+import rest.tasks.dto.CreateTaskRequest;
+import service.TaskService;
 
 @ApplicationScoped
 public class Startup {
+
+    @Inject
+    TaskService taskService;
+
     /**
      * This method is executed at the start of your application
      */
     public void start(@Observes StartupEvent evt) {
-        // in DEV mode we seed some data
-        if(LaunchMode.current() == LaunchMode.DEVELOPMENT) {
-            Todo a = new Todo();
-            a.task = "First item";
-            a.persist();
+        if (LaunchMode.current() == LaunchMode.DEVELOPMENT && TaskEntity.count() == 0) {
+            CreateTaskRequest open = new CreateTaskRequest();
+            open.setTitle("Review DB2 migration output");
+            taskService.create(open);
 
-            Todo b = new Todo();
-            b.task = "Second item";
-            b.completed = new Date();
-            b.persist();
+            CreateTaskRequest completed = new CreateTaskRequest();
+            completed.setTitle("Set up neobrutalist board theme");
+            completed.setStatus(TaskStatus.COMPLETED);
+            taskService.create(completed);
         }
     }
 }

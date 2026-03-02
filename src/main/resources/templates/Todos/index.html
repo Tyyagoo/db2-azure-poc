@@ -1,8 +1,60 @@
 {! This is a comment: you can extend the main.html file like this, to give your templates a common style !}
 {#include main.html}
 {! This passes a title parameter to the main template !}
-{#title}Welcome{/title}
+{#title}Todo Home{/title}
 
-<h1>Welcome to your Quarkus Renarde 🦊❤️ Application</h1> 
+{#moreStyles}
+<style>
+  .hero {
+    border: 3px solid #121212;
+    border-radius: 14px;
+    box-shadow: 7px 7px 0 0 #121212;
+    background: #90f28a;
+    padding: 1.25rem;
+  }
+
+  .hero h1 {
+    margin: 0;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1.04;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  .hero p {
+    margin: 0.85rem 0 1.3rem;
+    max-width: 60ch;
+    font-size: 1.05rem;
+  }
+
+  .launch {
+    display: inline-block;
+    text-decoration: none;
+    color: #121212;
+    background: #ffffff;
+    border: 3px solid #121212;
+    border-radius: 10px;
+    box-shadow: 5px 5px 0 0 #121212;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 0.6rem 0.9rem;
+  }
+
+  .launch:hover,
+  .launch:focus-visible {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 #121212;
+  }
+</style>
+{/moreStyles}
+
+<section class="hero">
+  <h1>Neobrutalist Todo App</h1>
+  <p>
+    Your todos are backed by DB2 and surfaced in a bold interface tuned for quick capture,
+    completion, and cleanup.
+  </p>
+  <a class="launch" href="{uri:Todos.todos}">Open Todo Board</a>
+</section>
 
 {/include}

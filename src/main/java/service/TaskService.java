@@ -144,6 +144,16 @@ public class TaskService {
     }
 
     @Transactional
+    public TaskEntity markCompleted(String id) {
+        return changeStatus(id, TaskStatus.COMPLETED);
+    }
+
+    @Transactional
+    public TaskEntity reopen(String id) {
+        return changeStatus(id, TaskStatus.OPEN);
+    }
+
+    @Transactional
     public int bulkSoftDelete(List<String> ids) {
         int affected = 0;
         for (String id : ids) {
@@ -179,6 +189,15 @@ public class TaskService {
         task.setDueDate(toInstant(request.getDueDate()));
         task.setPriority(request.getPriority());
         task.setTags(resolveTags(request.getTags()));
+    }
+
+    private TaskEntity changeStatus(String id, TaskStatus status) {
+        TaskEntity task = getById(id, false);
+        String before = toSnapshot(task);
+        task.setStatus(status);
+        entityManager.flush();
+        writeAudit(task.getId(), "update", before, toSnapshot(task));
+        return task;
     }
 
     private TaskStatus parseStatus(JsonNode statusNode) {
