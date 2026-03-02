@@ -29,11 +29,12 @@ class TaskQueryRepositoryTest {
     @Test
     @TestTransaction
     void shouldExcludeDeletedByDefaultAndReturnNewestFirst() {
-        TaskEntity old = persistTask("Old", "desc", TaskStatus.OPEN, Instant.parse("2026-01-01T00:00:00Z"), null, Set.of("alpha"));
-        TaskEntity newest = persistTask("Newest", "desc", TaskStatus.OPEN, Instant.parse("2026-01-03T00:00:00Z"), null, Set.of("beta"));
-        persistTask("Deleted", "desc", TaskStatus.OPEN, Instant.parse("2026-01-02T00:00:00Z"), Instant.parse("2026-01-04T00:00:00Z"), Set.of("beta"));
+        String scopedTag = "qrepo-default-scope";
+        TaskEntity old = persistTask("Old", "desc", TaskStatus.OPEN, Instant.parse("2026-01-01T00:00:00Z"), null, Set.of(scopedTag));
+        TaskEntity newest = persistTask("Newest", "desc", TaskStatus.OPEN, Instant.parse("2026-01-03T00:00:00Z"), null, Set.of(scopedTag));
+        persistTask("Deleted", "desc", TaskStatus.OPEN, Instant.parse("2026-01-02T00:00:00Z"), Instant.parse("2026-01-04T00:00:00Z"), Set.of(scopedTag));
 
-        TaskQuery query = TaskQuery.defaults();
+        TaskQuery query = TaskQuery.defaults().withTags(Set.of(scopedTag));
 
         TaskQueryResult result = repository.search(query);
 
@@ -46,15 +47,16 @@ class TaskQueryRepositoryTest {
     @Test
     @TestTransaction
     void shouldFilterByDeletedKeywordStatusAndTags() {
-        persistTask("Prepare docs", "Release note", TaskStatus.OPEN, Instant.parse("2026-02-01T00:00:00Z"), null, Set.of("docs", "release"));
+        String scopedTag = "qrepo-filter-scope";
+        persistTask("Prepare docs", "Release note", TaskStatus.OPEN, Instant.parse("2026-02-01T00:00:00Z"), null, Set.of("docs", scopedTag));
         TaskEntity deletedCompleted = persistTask("Deploy", "Production release", TaskStatus.COMPLETED,
-                Instant.parse("2026-02-02T00:00:00Z"), Instant.parse("2026-02-03T00:00:00Z"), Set.of("release", "ops"));
+                Instant.parse("2026-02-02T00:00:00Z"), Instant.parse("2026-02-03T00:00:00Z"), Set.of("release", scopedTag));
 
         TaskQuery query = TaskQuery.defaults()
                 .withDeleted(true)
                 .withKeyword("production")
                 .withStatus(TaskStatus.COMPLETED)
-                .withTags(Set.of("ops"));
+                .withTags(Set.of(scopedTag));
 
         TaskQueryResult result = repository.search(query);
 
@@ -65,13 +67,15 @@ class TaskQueryRepositoryTest {
     @Test
     @TestTransaction
     void shouldApplyDueDateSortingAndPagination() {
-        TaskEntity firstDue = persistTask("A", "x", TaskStatus.OPEN, Instant.parse("2026-03-01T00:00:00Z"), null, Set.of("tag1"));
-        TaskEntity secondDue = persistTask("B", "x", TaskStatus.OPEN, Instant.parse("2026-03-02T00:00:00Z"), null, Set.of("tag2"));
-        persistTask("C", "x", TaskStatus.OPEN, Instant.parse("2026-03-03T00:00:00Z"), null, Set.of("tag3"));
+        String scopedTag = "qrepo-page-scope";
+        TaskEntity firstDue = persistTask("A", "x", TaskStatus.OPEN, Instant.parse("2026-03-01T00:00:00Z"), null, Set.of(scopedTag));
+        TaskEntity secondDue = persistTask("B", "x", TaskStatus.OPEN, Instant.parse("2026-03-02T00:00:00Z"), null, Set.of(scopedTag));
+        persistTask("C", "x", TaskStatus.OPEN, Instant.parse("2026-03-03T00:00:00Z"), null, Set.of(scopedTag));
 
         TaskQuery query = TaskQuery.defaults()
                 .withSort(TaskSort.DUE_DATE)
                 .withOrder(SortOrder.ASC)
+                .withTags(Set.of(scopedTag))
                 .withPage(2)
                 .withSize(1);
 

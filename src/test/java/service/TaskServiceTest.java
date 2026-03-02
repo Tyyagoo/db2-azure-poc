@@ -63,18 +63,20 @@ class TaskServiceTest {
     @Test
     @TestTransaction
     void shouldBulkCreateAllOrNothingAndListViaQueryModel() {
+        String scopedTag = "service-bulk-scope";
         CreateTaskRequest first = new CreateTaskRequest();
         first.setTitle("Bulk one");
-        first.setTags(Set.of("Ops"));
+        first.setTags(Set.of(scopedTag));
 
         CreateTaskRequest second = new CreateTaskRequest();
         second.setTitle("Bulk two");
         second.setStatus(TaskStatus.COMPLETED);
+        second.setTags(Set.of(scopedTag));
 
         List<TaskEntity> created = taskService.bulkCreate(List.of(first, second));
 
         assertEquals(2, created.size());
-        assertEquals(2, taskService.list(TaskQuery.defaults()).items().size());
+        assertEquals(2, taskService.list(TaskQuery.defaults().withTags(Set.of(scopedTag))).items().size());
     }
 
     @Test
