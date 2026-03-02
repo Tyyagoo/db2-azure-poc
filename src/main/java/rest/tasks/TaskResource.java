@@ -13,7 +13,6 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -21,13 +20,15 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.EntityTag;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import model.task.TaskEntity;
 import model.task.TaskStatus;
+import rest.tasks.errors.NotFoundException;
+import rest.tasks.errors.PreconditionFailedException;
+import rest.tasks.errors.PreconditionRequiredException;
 import rest.tasks.dto.BulkCreateTasksRequest;
 import rest.tasks.dto.BulkDeleteTasksRequest;
 import rest.tasks.dto.CreateTaskRequest;
@@ -215,12 +216,12 @@ public class TaskResource {
 
     private void ensureIfMatch(String ifMatch, Long currentVersion) {
         if (ifMatch == null || ifMatch.isBlank()) {
-            throw new WebApplicationException(Response.status(428).build());
+            throw new PreconditionRequiredException("Missing If-Match header");
         }
 
         Long requestedVersion = parseIfMatchVersion(ifMatch);
         if (!currentVersion.equals(requestedVersion)) {
-            throw new WebApplicationException(Response.Status.PRECONDITION_FAILED);
+            throw new PreconditionFailedException("If-Match version does not match current resource version");
         }
     }
 
@@ -236,7 +237,7 @@ public class TaskResource {
         try {
             return Long.parseLong(candidate);
         } catch (NumberFormatException e) {
-            throw new WebApplicationException(Response.Status.PRECONDITION_FAILED);
+            throw new PreconditionFailedException("Invalid If-Match header");
         }
     }
 
@@ -249,7 +250,7 @@ public class TaskResource {
         try {
             return supplier.get();
         } catch (TaskNotFoundException e) {
-            throw new NotFoundException(e.getMessage());
+            throw new NotFoundException("Task not found");
         }
     }
 
@@ -257,7 +258,7 @@ public class TaskResource {
         try {
             runnable.run();
         } catch (TaskNotFoundException e) {
-            throw new NotFoundException(e.getMessage());
+            throw new NotFoundException("Task not found");
         }
     }
 

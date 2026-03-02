@@ -19,6 +19,59 @@ import static org.hamcrest.Matchers.notNullValue;
 class TaskResourceTest {
 
     @Test
+    void shouldReturnConsistentErrorPayloads() {
+        given()
+                .queryParam("sort", "not-a-sort")
+                .when()
+                .get("/tasks")
+                .then()
+                .statusCode(400)
+                .body("error", equalTo("bad_request"))
+                .body("message", equalTo("Invalid sort: not-a-sort"))
+                .body("details", notNullValue());
+
+        given()
+                .when()
+                .get("/tasks/{id}", "00000000-0000-0000-0000-000000000000")
+                .then()
+                .statusCode(404)
+                .body("error", equalTo("not_found"))
+                .body("message", equalTo("Task not found"));
+
+        String id = given()
+                .contentType(ContentType.JSON)
+                .body(Map.of("title", "Error precondition test"))
+                .when()
+                .post("/tasks")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("id");
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(Map.of("title", "No If-Match"))
+                .when()
+                .put("/tasks/{id}", id)
+                .then()
+                .statusCode(428)
+                .body("error", equalTo("precondition_required"))
+                .body("message", equalTo("Missing If-Match header"));
+
+        given()
+                .header("If-Match", "W/\"999\"")
+                .contentType(ContentType.JSON)
+                .body(Map.of("title", "Stale"))
+                .when()
+                .put("/tasks/{id}", id)
+                .then()
+                .statusCode(412)
+                .body("error", equalTo("precondition_failed"))
+                .body("message", equalTo("If-Match version does not match current resource version"))
+                .body("details", notNullValue());
+    }
+
+    @Test
     void shouldCreateGetAndEnforceIfMatchOnPut() {
         String id = given()
                 .contentType(ContentType.JSON)
