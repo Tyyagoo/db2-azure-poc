@@ -34,7 +34,7 @@ Task Index (work top-to-bottom)
   - Details: `planning/TASK-03-domain-model.md`
 - [x] TASK-04: DTOs + validation (create/update/patch/bulk + responses)
   - Details: `planning/TASK-04-dtos-and-validation.md`
-- [ ] TASK-05: Query model (list/search/filter/sort/pagination)
+- [x] TASK-05: Query model (list/search/filter/sort/pagination)
   - Details: `planning/TASK-05-querying.md`
 - [ ] TASK-06: Service layer (CRUD + bulk + tags + trash/restore + audit)
   - Details: `planning/TASK-06-service-layer.md`
